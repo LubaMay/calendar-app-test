@@ -67,8 +67,8 @@ const App = (props) => {
     let menuClick = false;
 
     useEffect(() => {
-        const { dispatch } = props;
-        dispatch(handleInitialData());
+        //const { dispatch } = props;
+        //dispatch(handleInitialData());
         if (sidebarActive) {
             addClass(document.body, "body-overflow-hidden");
         } else {

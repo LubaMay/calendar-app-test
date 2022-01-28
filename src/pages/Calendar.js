@@ -37,7 +37,7 @@ const Calendar = (props) => {
 
     useEffect(() => {
         const { dispatch } = props;
-        dispatch(receiveEvents(events));
+        dispatch(handleInitialData());
         // const eventService = new EventService();
         // eventService.getEvents().then((data) => setEvents(data));
     }, []);
