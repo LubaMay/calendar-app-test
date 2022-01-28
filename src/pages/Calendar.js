@@ -1,43 +1,56 @@
-import React, { useEffect, useState } from 'react';
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import { Button } from 'primereact/button';
-import { Dialog } from 'primereact/dialog';
-import { InputText } from 'primereact/inputtext';
-import { Checkbox } from 'primereact/checkbox';
-import { Calendar as PRCalendar } from 'primereact/calendar';
-import { EventService } from '../service/EventService';
+import React, { useEffect, useState } from "react";
+import { ScheduleComponent, Day, Week, WorkWeek, Month, Agenda, Inject, DragAndDrop, Resize } from "@syncfusion/ej2-react-schedule";
+import { connect } from "react-redux";
+import { useDispatch } from "react-redux";
+import { DataManager, UrlAdaptor } from "@syncfusion/ej2-data";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import { Button } from "primereact/button";
+import { Dialog } from "primereact/dialog";
+import { InputText } from "primereact/inputtext";
+import { Checkbox } from "primereact/checkbox";
+import { Calendar as PRCalendar } from "primereact/calendar";
+import { handleInitialData, handleUpdateData } from "../actions/shared";
+import { receiveEvents } from "../actions/events";
+import { updateEvents } from "../actions/events";
 
-export const Calendar = () => {
+import "../App.css";
 
+const Calendar = (props) => {
+    //const dispatch = useDispatch();
     const [eventDialog, setEventDialog] = useState(false);
     const [clickedEvent, setClickedEvent] = useState(null);
-    const [changedEvent, setChangedEvent] = useState({ title: '', start: null, end: null, allDay: null });
-    const [events, setEvents] = useState(null);
+    const [changedEvent, setChangedEvent] = useState({ title: "", start: null, end: null, allDay: null });
+    // const [events, setEvents] = useState(null);
+
+    console.log("exact props", props);
+    const { events } = props;
 
     const eventClick = (e) => {
         const { title, start, end } = e.event;
         setEventDialog(true);
         setClickedEvent(e.event);
         setChangedEvent({ title, start, end, allDay: null });
-    }
+    };
 
     useEffect(() => {
-        const eventService = new EventService();
-        eventService.getEvents().then(data => setEvents(data));
-    }, [])
+        const { dispatch } = props;
+        dispatch(receiveEvents(events));
+        // const eventService = new EventService();
+        // eventService.getEvents().then((data) => setEvents(data));
+    }, []);
 
     const save = () => {
         setEventDialog(false);
 
-        clickedEvent.setProp('title', changedEvent.title)
-        clickedEvent.setStart(changedEvent.start)
-        clickedEvent.setEnd(changedEvent.end)
-        clickedEvent.setAllDay(changedEvent.allDay)
+        clickedEvent.setProp("title", changedEvent.title);
+        clickedEvent.setStart(changedEvent.start);
+        clickedEvent.setEnd(changedEvent.end);
+        clickedEvent.setAllDay(changedEvent.allDay);
 
-        setChangedEvent({ title: '', start: null, end: '', allDay: null });
+        setChangedEvent({ title: "", start: null, end: "", allDay: null });
     };
 
     const reset = () => {
@@ -52,15 +65,63 @@ export const Calendar = () => {
         </>
     );
 
+    function onActionComplete(args) {
+        if (args.requestType === "toolBarItemRendered") {
+            // This block is execute after toolbarItem render
+        }
+        if (args.requestType === "dateNavigate") {
+            // This block is executed after previous and next navigation
+        }
+        if (args.requestType === "viewNavigate") {
+            // This block is execute after view navigation
+        }
+        if (args.requestType === "eventCreated") {
+            console.log("CREATED", args);
+        }
+        if (args.requestType === "eventChanged") {
+            const { dispatch } = props;
+            dispatch(handleUpdateData(args.data[0]));
+        }
+        if (args.requestType === "eventRemoved") {
+            // This block is execute after an appointment remove
+        }
+    }
+
     return (
         <div className="p-grid">
             <div className="p-col-12">
                 <div className="card">
+                    <ScheduleComponent eventSettings={{ dataSource: events }} actionComplete={onActionComplete}>
+                        <Inject services={[Day, Week, WorkWeek, Month, Agenda, DragAndDrop, Resize]} />
+                    </ScheduleComponent>
+                </div>
+            </div>
+        </div>
+    );
+};
 
-                    <FullCalendar events={events} eventClick={eventClick} initialDate="2021-01-01" initialView='dayGridMonth' plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-                                  headerToolbar={{ left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' }} editable selectable selectMirror dayMaxEvents />
+function mapStateToProps({ events }) {
+    return {
+        events: events.data,
+    };
+}
 
-                    <Dialog visible={eventDialog && !!clickedEvent} style={{ width: '450px' }} header="Event Details" footer={footer} modal closable onHide={() => setEventDialog(false)}>
+export default connect(mapStateToProps)(Calendar);
+
+//{
+/* <FullCalendar
+                        events={events}
+                        eventClick={eventClick}
+                        initialDate="2021-01-01"
+                        initialView="dayGridMonth"
+                        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                        headerToolbar={{ left: "prev,next today", center: "title", right: "dayGridMonth,timeGridWeek,timeGridDay" }}
+                        editable
+                        selectable
+                        selectMirror
+                        dayMaxEvents
+                    />
+                    <Dialog visible={eventDialog && !!clickedEvent} style={{ width: "450px" }} header="Event Details" footer={footer} modal closable onHide={() => setEventDialog(false)}>
                         <div className="p-fluid">
                             <div className="p-field">
                                 <label htmlFor="title">Title</label>
@@ -79,9 +140,5 @@ export const Calendar = () => {
                                 <label htmlFor="allday">All Day</label>
                             </div>
                         </div>
-                    </Dialog>
-                </div>
-            </div>
-        </div>
-    )
-}
+                    </Dialog> */
+//}
